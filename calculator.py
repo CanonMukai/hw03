@@ -77,8 +77,8 @@ def evaluate1(tokens):
                 if tokens[index]['type'] == 'ASTERISK':
                     calc_result *= tokens[index + 1]['number']
                 if tokens[index]['type'] == 'SLASH':
-                    if tokens[index + 1]['number'] == 0:
-                        rprint('ZeroDivisinError')
+                    if tokens[index + 1]['number'] == 0: # division by 0
+                        print('ZeroDivisinError')
                         exit(1)
                     calc_result /= tokens[index + 1]['number']
                 index += 2
