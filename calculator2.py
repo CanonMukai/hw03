@@ -32,7 +32,7 @@ def readKakko(line, index):
     right_kakko_counter = 0  # ')'の数
     index += 1  # 最初の'('はすでに検証したので
     
-    # 最初の'('が閉じるには、'('と')'が同数必要なので ((2+3)+2)なら'('と')'が2個ずつ
+    # 最初の'('が閉じるには、'('と')'が同数必要  ex) ((2+3)+2)なら'('と')'が2個ずつ
     while index < len(line) and left_kakko_counter != right_kakko_counter:
         if line[index] == '(':
             left_kakko_counter += 1
