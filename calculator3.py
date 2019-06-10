@@ -18,33 +18,15 @@ def readNumber(line, index):
     return token, index
 
 
-####### ()の中身を計算 #######
-# calc ((2+3)+2)-1:
-#  tokenize -> '(2+3)+2', '-', '1'
-#   '(2+3)+2' -> '(2+3)', '+', '2'
-#    '(2+3)' -> '2', '+', '3' -> evaluate -> '5'
-#     '5', '+', '2', '-', '1' -> evaluate -> 6
-# 再帰して内側の()から順にcalcし、
-# 最終的に最外側の()の値とその他のtokenをcalcして計算
-def read_and_calc_Kakko(line, index):
-    index_memo = index  # indexが変化するので、memoしておく
-    left_kakko_counter = 1  # '('の数  readKakkoに入る時点で必ず'('が1つ存在
-    right_kakko_counter = 0  # ')'の数
-    index += 1  # 最初の'('はすでに検証したので
-    
-    # 最初の'('が閉じるには、'('と')'が同数必要  ex) ((2+3)+2)なら'('と')'が2個ずつ
-    while index < len(line) and left_kakko_counter != right_kakko_counter:
-        if line[index] == '(':
-            left_kakko_counter += 1
-        elif line[index] == ')':
-            right_kakko_counter += 1
-        index += 1
-        
-    # さらに内側の()内に再帰をかます
-    number = calc_answer(line[index_memo+1: index-1])
-    token = {'type': 'NUMBER', 'number': number}
-    return token, index
+####### '('を読む #######
+def readLeftKakko(line, index):
+    token = {'type': 'L_KAKKO'}
+    return token, index + 1
 
+####### ')'を読む #######
+def readRightKakko(line, index):
+    token = {'type': 'R_KAKKO'}
+    return token, index + 1
 
 ####### '+'を読む #######
 def readPlus(line, index):
@@ -85,12 +67,36 @@ def tokenize(line):
         elif line[index] == '/':
             (token, index) = readSlash(line, index)
         elif line[index] == '(':
-            (token, index) = read_and_calc_Kakko(line, index)
+            (token, index) = readLeftKakko(line, index)
+        elif line[index] == ')':
+            (token, index) = readRightKakko(line, index)
         else:
             print('Invalid character found: ' + line[index])
             exit(1)
         tokens.append(token)
     return tokens
+
+def evaluate_kakko(tokens):
+    index = 0
+    tokens2 = {}
+    while index < len(tokens):
+        if tokens[index]['type'] == 'L_KAKKO':
+            L_kakko = 1
+            R_kakko = 0
+            index_memo = index
+            index += 1
+            while index < len(tokens) and  L_kakko != R_kakko:
+                if tokens[index]['type'] == 'L_KAKKO':
+                    L_kakko += 1
+                elif tokens[index]['type'] == 'R_KAKKO':
+                    R_kakko += 1
+                index += 1
+            number = evaluate_kakko(tokens[index_memo: index-1]))
+            token = {'type':'NUMBER', 'number':number}
+            tokens2.append(token)
+        else:
+            tokens2.append(tokens[index])
+            index += 1
 
 
 ####### 1st evaluation *, / #######
@@ -146,9 +152,8 @@ def evaluate_plus_and_minus(tokens2):
         index += 1
     return answer
 
-####### calculate answer #######
-def calc_answer(line):
-    tokens = tokenize(line)
+# evaluate
+def evaluate(tokens):
     tokens = evaluate_multiplication_and_division(tokens)
     answer = evaluate_plus_and_minus(tokens)
     return answer
@@ -157,7 +162,7 @@ def calc_answer(line):
 
 ####### test #######
 def test(line):
-    actualAnswer = calc_answer(line)
+    actualAnswer = evaluate(tokens)
     expectedAnswer = eval(line)
     if abs(actualAnswer - expectedAnswer) < 1e-8:
         print("PASS! (%s = %f)" % (line, expectedAnswer))
@@ -167,6 +172,24 @@ def test(line):
 ####### test case #######
 def runTest():
     print("==== Test started! ====")
+    test("(2)")
+    test("(2)+3")
+    test("(2+3)")
+    test("(2+3)*4.0")
+    test("((2+3)*2-1)/4")
+    print("==== Test finished! ====\n")
+
+
+####### main #######
+runTest()
+while True:
+    print('> ', end="")
+    line = input()
+    tokens = tokenize(line) 
+    answer = evaluate(tokens)
+    print("answer = %f\n" % answer)
+
+"""
     test("2.0")
     test("1+2")
     test("1-2.0")
@@ -181,20 +204,4 @@ def runTest():
     test("0.5/2*3")
     test("2.1+0.5/2*3-1")
     test("2.1+0.5/2*3-2/1")
-    test("(2)")
-    test("(2)+3")
-    test("(2+3)")
-    test("(2+3)*4.0")
-    test("((2+3)*2-1)/4")
-    print("==== Test finished! ====\n")
-
-
-####### main #######
-runTest()
-while True:
-    print('> ', end="")
-    line = input()
-    answer = calc_answer(line)
-    print("answer = %f\n" % answer)
-
-
+"""

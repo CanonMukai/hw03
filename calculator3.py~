@@ -18,15 +18,15 @@ def readNumber(line, index):
     return token, index
 
 
-####### ()の中身を計算 #######
+####### ()を読む #######
 # calc ((2+3)+2)-1:
 #  tokenize -> '(2+3)+2', '-', '1'
 #   '(2+3)+2' -> '(2+3)', '+', '2'
 #    '(2+3)' -> '2', '+', '3' -> evaluate -> '5'
 #     '5', '+', '2', '-', '1' -> evaluate -> 6
-# 再帰して内側の()から順にcalcし、
-# 最終的に最外側の()の値とその他のtokenをcalcして計算
-def read_and_calc_Kakko(line, index):
+# 再帰して内側の()から順にevaluateし、
+# 最終的に最外側の()の値とその他のtokenをevaluateして計算
+def readKakko(line, index):
     index_memo = index  # indexが変化するので、memoしておく
     left_kakko_counter = 1  # '('の数  readKakkoに入る時点で必ず'('が1つ存在
     right_kakko_counter = 0  # ')'の数
@@ -41,7 +41,7 @@ def read_and_calc_Kakko(line, index):
         index += 1
         
     # さらに内側の()内に再帰をかます
-    number = calc_answer(line[index_memo+1: index-1])
+    number = evaluate(tokenize(line[index_memo+1: index-1]))
     token = {'type': 'NUMBER', 'number': number}
     return token, index
 
@@ -85,7 +85,7 @@ def tokenize(line):
         elif line[index] == '/':
             (token, index) = readSlash(line, index)
         elif line[index] == '(':
-            (token, index) = read_and_calc_Kakko(line, index)
+            (token, index) = readKakko(line, index)
         else:
             print('Invalid character found: ' + line[index])
             exit(1)
@@ -146,9 +146,8 @@ def evaluate_plus_and_minus(tokens2):
         index += 1
     return answer
 
-####### calculate answer #######
-def calc_answer(line):
-    tokens = tokenize(line)
+# evaluate
+def evaluate(tokens):
     tokens = evaluate_multiplication_and_division(tokens)
     answer = evaluate_plus_and_minus(tokens)
     return answer
@@ -157,7 +156,8 @@ def calc_answer(line):
 
 ####### test #######
 def test(line):
-    actualAnswer = calc_answer(line)
+    tokens = tokenize(line)
+    actualAnswer = evaluate(tokens)
     expectedAnswer = eval(line)
     if abs(actualAnswer - expectedAnswer) < 1e-8:
         print("PASS! (%s = %f)" % (line, expectedAnswer))
@@ -194,7 +194,8 @@ runTest()
 while True:
     print('> ', end="")
     line = input()
-    answer = calc_answer(line)
+    tokens = tokenize(line) 
+    answer = evaluate(tokens)
     print("answer = %f\n" % answer)
 
 
